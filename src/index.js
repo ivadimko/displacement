@@ -12,6 +12,7 @@ import slide1 from '@/images/cat1.jpg';
 import slide2 from '@/images/cat2.jpg';
 import slide3 from '@/images/cat3.jpg';
 import slide4 from '@/images/cat4.jpg';
+import slide5 from '@/images/cat5.jpg';
 
 // const OrbitControls = require('three-orbit-controls')(THREE);
 
@@ -53,7 +54,7 @@ class Sketch {
 
     this.loader.crossOrigin = 'anonymous';
 
-    this.gallery = [slide1, slide2, slide3, slide4].map(url => this.loader.load(url));
+    this.gallery = [slide1, slide2, slide3, slide4, slide5].map(url => this.loader.load(url));
 
     this.currentSlide = 0;
 
