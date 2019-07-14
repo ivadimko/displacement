@@ -6,7 +6,14 @@ import * as dat from 'dat.gui';
 import fragment from '@/shaders/fragment.glsl';
 import vertex from '@/shaders/vertex.glsl';
 
-const OrbitControls = require('three-orbit-controls')(THREE);
+import { TweenMax, Expo } from 'gsap/all';
+
+import slide1 from '@/images/cat1.jpg';
+import slide2 from '@/images/cat2.jpg';
+import slide3 from '@/images/cat3.jpg';
+import slide4 from '@/images/cat4.jpg';
+
+// const OrbitControls = require('three-orbit-controls')(THREE);
 
 class Sketch {
   constructor(selector) {
@@ -19,7 +26,7 @@ class Sketch {
 
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(this.vw, this.vh);
-    this.renderer.setClearColor(0xeeeeee, 1);
+    this.renderer.setClearColor(0x000000, 1);
 
     this.container = document.querySelector(selector);
     this.container.appendChild(this.renderer.domElement);
@@ -34,26 +41,36 @@ class Sketch {
 
     this.camera.lookAt(0, 0, 0);
 
-    this.time = 0;
-
     this.group = new THREE.Group();
 
     this.scene.add(this.group);
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
     this.settings = null;
+
+    this.loader = new THREE.TextureLoader();
+
+    this.loader.crossOrigin = 'anonymous';
+
+    this.gallery = [slide1, slide2, slide3, slide4].map(url => this.loader.load(url));
+
+    this.currentSlide = 0;
 
     this.resize = this.resize.bind(this);
     this.animate = this.animate.bind(this);
 
-    this.setupSettings();
+    // this.setupSettings();
     this.setupResize();
 
 
     this.resize();
     this.addObjects();
     this.animate();
+
+    setTimeout(() => {
+      this.changeSlide();
+    }, 3000);
   }
 
   setupSettings() {
@@ -91,11 +108,18 @@ class Sketch {
       },
       side: THREE.DoubleSide,
       uniforms: {
-        time: { type: 'f', value: 0 },
-        progress: { type: 'f', value: this.settings.progress },
+        progress: { type: 'f', value: 0 },
+        currentImage: {
+          type: 't',
+          value: this.gallery[this.currentSlide],
+        },
+        nextImage: {
+          type: 't',
+          value: this.gallery[this.currentSlide + 1],
+        },
       },
-      wireframe: this.settings.wireframe,
-      // transparent: true,
+      transparent: true,
+      opacity: 1,
       vertexShader: vertex,
       fragmentShader: fragment,
     });
@@ -108,11 +132,6 @@ class Sketch {
   }
 
   animate() {
-    this.time += 0.001;
-    this.material.uniforms.time.value = this.time;
-    this.material.uniforms.progress.value = this.settings.progress;
-
-
     requestAnimationFrame(this.animate);
 
     this.render();
@@ -120,6 +139,24 @@ class Sketch {
 
   render() {
     this.renderer.render(this.scene, this.camera);
+  }
+
+  changeSlide() {
+    const nextSlide = (this.currentSlide + 1) % this.gallery.length;
+    this.material.uniforms.nextImage.value = this.gallery[nextSlide];
+    TweenMax.to(this.material.uniforms.progress, 1, {
+      value: 1,
+      ease: Expo.easeInOut,
+      onComplete: () => {
+        this.material.uniforms.currentImage.value = this.gallery[nextSlide];
+        this.material.uniforms.currentImage.needsUpdate = true;
+        this.material.uniforms.progress.value = 0;
+        this.currentSlide = nextSlide;
+        setTimeout(() => {
+          this.changeSlide();
+        }, 3000);
+      },
+    });
   }
 }
 

@@ -1,6 +1,3 @@
-uniform float time;
-uniform float progress;
-
 varying vec2 vUv;
 
 void main() {
